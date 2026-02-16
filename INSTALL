@@ -26,9 +26,6 @@ to qmake arguments.
 Available plugins:
     * stardict - supports StarDict dictionaries
     * web - supports any web search engine
-    * swac - supports SWAC speaking system (http://shtooka.net)
-    * multitran - supports Multitran dictionaries (http://multitran.sourceforge.net)
-By default the only "stardict" and "web" are plugins enabled.
 
 By default the install prefix is /usr. To change it add
     INSTALL_PREFIX=<your prefix>
