@@ -564,9 +564,13 @@
         <translation>Pronuncia le parole usando questo comando:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.ui" line="100"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation>Inserisci il comando per il programma di pronuncia.&lt;br&gt;Se il comando contiene &quot;%s&quot; la parola verrà sostituita, altrimenti la parola sarà scritta nello stdin del processo di pronuncia.</translation>
+        <translation type="vanished">Inserisci il comando per il programma di pronuncia.&lt;br&gt;Se il comando contiene &quot;%s&quot; la parola verrà sostituita, altrimenti la parola sarà scritta nello stdin del processo di pronuncia.</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="100"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="112"/>

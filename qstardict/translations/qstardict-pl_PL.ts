@@ -568,9 +568,13 @@
         <translation>Wymów słowo używając tego polecenia:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.ui" line="100"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation>Wpisz komendę dla syntezatora mowy.&lt;br&gt;Jeśli komenda zawiera &quot;%s&quot; to będzie ona zastąpiona słowem lub słowo zostanie zapisane do stdin procesu mówienia.</translation>
+        <translation type="vanished">Wpisz komendę dla syntezatora mowy.&lt;br&gt;Jeśli komenda zawiera &quot;%s&quot; to będzie ona zastąpiona słowem lub słowo zostanie zapisane do stdin procesu mówienia.</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="100"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="112"/>

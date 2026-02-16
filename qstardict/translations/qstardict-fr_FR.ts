@@ -564,9 +564,13 @@
         <translation>Prononcer les mots en lançant la commande :</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.ui" line="100"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation>Veuillez entrer la commande à executer pour la prononciation des mots. &lt;br&gt;Si la commande contient la chaine de caractère &quot;%s&quot;, celle-ci sera remplacée par le mot à prononcer sinon le mot sera envoyé à la sortie standard du processus lancé (stdin).</translation>
+        <translation type="vanished">Veuillez entrer la commande à executer pour la prononciation des mots. &lt;br&gt;Si la commande contient la chaine de caractère &quot;%s&quot;, celle-ci sera remplacée par le mot à prononcer sinon le mot sera envoyé à la sortie standard du processus lancé (stdin).</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="100"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="112"/>

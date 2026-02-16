@@ -544,9 +544,13 @@
         <translation type="unfinished">Вимовляти слова, використовуючи цю команду: </translation>
     </message>
     <message>
-        <location filename="../settingsdialog.ui" line="100"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation type="unfinished">Введіть команду для розмовної програми. &lt;br&gt;Якщо команда містить &quot;%s&quot; це буде замінено словом, інaкше слово буде записано на stdin.</translation>
+        <translation type="obsolete">Введіть команду для розмовної програми. &lt;br&gt;Якщо команда містить &quot;%s&quot; це буде замінено словом, інaкше слово буде записано на stdin.</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="100"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="112"/>

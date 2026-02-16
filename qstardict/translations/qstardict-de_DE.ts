@@ -564,9 +564,13 @@
         <translation>Folgendes Kommando zur Aussprache verwenden:</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.ui" line="100"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation>Geben Sie das Kommando für das Ausspracheprogramm ein.&lt;br&gt;Falls das Kommando &quot;%s&quot; enthält, wird dies durch das Wort ersetzt, andernfalls wird das Wort auf die stdin des Sprachprozesses geschrieben.</translation>
+        <translation type="vanished">Geben Sie das Kommando für das Ausspracheprogramm ein.&lt;br&gt;Falls das Kommando &quot;%s&quot; enthält, wird dies durch das Wort ersetzt, andernfalls wird das Wort auf die stdin des Sprachprozesses geschrieben.</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="100"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="112"/>

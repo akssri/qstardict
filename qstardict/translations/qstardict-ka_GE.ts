@@ -568,9 +568,13 @@
         <translation>სიტყვების წარმოთქმა ამ ბრძანებით:</translation>
     </message>
     <message>
-        <location line="+7"/>
         <source>Enter cmd for the speaching program.&lt;br&gt;If cmd contains &quot;%s&quot; it will be replaced to word, else word will be writen to stdin of speech process.</source>
-        <translation>შეიყვანეთ ბრძანება წარმოთქმის პროგრამისთვის.&lt;br&gt;თუ ბრძანება შეიცავს &quot;%s&quot;-ს, ის სიტყვით ჩანაცვლდება. წინააღმდეგ შემთხვევაში სიტყვები წარმოთქმის პროცესის სტანდარტულ შეყვანაში ჩაიწერება.</translation>
+        <translation type="vanished">შეიყვანეთ ბრძანება წარმოთქმის პროგრამისთვის.&lt;br&gt;თუ ბრძანება შეიცავს &quot;%s&quot;-ს, ის სიტყვით ჩანაცვლდება. წინააღმდეგ შემთხვევაში სიტყვები წარმოთქმის პროცესის სტანდარტულ შეყვანაში ჩაიწერება.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Enter the command for the speaking program. If the command contains &quot;%s&quot; it will be replaced by the word, otherwise the word will be writen to the standard input of the speech process.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+12"/>
