@@ -252,7 +252,7 @@
     <message>
         <location filename="../dictwidget.cpp" line="159"/>
         <source>Please select a part of the article with the translation that you want to add for studying and try again.</source>
-        <translation>Пожалуйста, выберите часть статьи с переводом, который Вы хотите добавить для изучения и попробуйте снова.</translation>
+        <translation>Пожалуйста, выберите часть статьи с переводом, который Вы хотите добавить для изучения, и попробуйте снова.</translation>
     </message>
     <message>
         <location filename="../dictwidget.cpp" line="173"/>
