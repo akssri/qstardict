@@ -23,6 +23,7 @@
 
 #include <QFrame>
 
+class QEnterEvent;
 class QEvent;
 class QMouseEvent;
 class QTimerEvent;
@@ -75,7 +76,7 @@ class ResizablePopup: public QFrame
         void popup();
 
     protected:
-        void enterEvent(QEvent*);
+        void enterEvent(QEnterEvent*);
         void leaveEvent(QEvent*);
         void mouseMoveEvent(QMouseEvent*);
         void mousePressEvent(QMouseEvent*);

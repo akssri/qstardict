@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/sounds">
+        <file>dialog-information.oga</file>
+        <file>dialog-warning.oga</file>
+    </qresource>
+</RCC>

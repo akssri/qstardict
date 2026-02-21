@@ -23,10 +23,11 @@ VERSION = 3.0.0
 QT = \
     core \
     gui \
+    multimedia \
     network \
-    xml \
     sql \
-    widgets
+    widgets \
+    xml
 
 CONFIG += \
     qt \

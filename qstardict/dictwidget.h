@@ -32,6 +32,7 @@ namespace QStarDict
 {
 
 class DictBrowserSearch;
+class Toast;
 
 /**
  * The DictBrowser widget provides view of translations from given dictionary.
@@ -135,6 +136,7 @@ class DictWidget: public QFrame
     private:
         DictBrowser *m_translationView;
         QToolBar *m_toolBar;
+        Toast *m_toast;
         DictBrowserSearch *m_search;
 };
 

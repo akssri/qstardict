@@ -56,6 +56,7 @@ HEADERS += \
     selection.h \
     settingsdialog.h \
     speaker.h \
+    toast.h \
     trainer.h \
     trainingsummary.h \
     tray.h \
@@ -86,6 +87,7 @@ SOURCES += \
     selection.cpp \
     settingsdialog.cpp \
     speaker.cpp \
+    toast.cpp \
     trainer.cpp \
     trainingsummary.cpp \
     tray.cpp \
@@ -117,7 +119,8 @@ unix | win32 {
 }
 
 RESOURCES += \
-    pixmaps/pixmaps.qrc
+    pixmaps/pixmaps.qrc \
+    sounds/sounds.qrc
 win32:RC_FILE += \
     qstardict.rc
 DISTFILES += \

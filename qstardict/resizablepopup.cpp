@@ -77,7 +77,7 @@ void ResizablePopup::popup()
     m_isPopuped = true;
 }
 
-void ResizablePopup::enterEvent(QEvent*)
+void ResizablePopup::enterEvent(QEnterEvent*)
 {
     if (m_timerCloseId)
     {

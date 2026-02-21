@@ -36,6 +36,7 @@
 #include "ipa.h"
 #include "mainwindow.h"
 #include "speaker.h"
+#include "toast.h"
 #include "vocabulary.h"
 
 namespace
@@ -112,6 +113,9 @@ DictWidget::DictWidget(QWidget *parent, Qt::WindowFlags f, bool openMainWindowAc
             tr("Open in the main window"), this, &DictWidget::openMainWindow);
     }
 
+    m_toast = new Toast(m_translationView);
+    connect(m_translationView, &QTextBrowser::sourceChanged, m_toast, &Toast::hide);
+
     QGridLayout *layout = new QGridLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -155,9 +159,10 @@ void DictWidget::addWord()
     if (cursor.hasSelection())
         translation = cursor.selection().toPlainText().trimmed();
     else {
-        m_translationView->showToast(
+        m_toast->show(
             tr("Please select a part of the article with the translation that " \
-               "you want to add for studying and try again."));
+               "you want to add for studying and try again."),
+             Toast::ToastType::Warning);
         return;
     }
 
@@ -169,10 +174,11 @@ void DictWidget::addWord()
     auto transcription = transcriptionRegExp.match(html).captured(1);
 
     Application::instance()->vocabulary()->addWord(word, translation, transcription);
-    m_translationView->showToast(
+    m_toast->show(
             tr("The word \"%1\" is added for studying.").arg(word) + "<br>\n" +
             tr("Transcription: <b>%1</b>.").arg(transcription) + "<br>\n" +
-            tr("Translation: %1.").arg(translation));
+            tr("Translation: %1.").arg(translation),
+            Toast::ToastType::Information);
 }
 
 void DictWidget::openMainWindow()
