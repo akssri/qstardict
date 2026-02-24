@@ -21,6 +21,7 @@
 #include "trainingsummary.h"
 
 #include <QKeyEvent>
+#include <QtMinMax>
 
 #include "application.h"
 #include "mainwindow.h"
@@ -58,7 +59,7 @@ void TrainingSummary::setProgress(unsigned studiedToday, unsigned plannedToday)
         progressLabel->setText(tr("Progress today: 1/%1 word").arg(plannedToday));
     else
         progressLabel->setText(tr("Progress today: %1/%2 words").arg(studiedToday).arg(plannedToday));
-    progressBar->setValue(studiedToday);
+    progressBar->setValue(qMin(studiedToday, plannedToday));
     progressBar->setMaximum(plannedToday);
 }
 
