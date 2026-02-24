@@ -80,16 +80,13 @@ QMediaPlayer *Toast::createMediaPlayer(const QUrl &soundUrl)
     QAudioOutput *audioOutput = new QAudioOutput(this);
     QMediaPlayer *player = new QMediaPlayer(this);
     player->setAudioOutput(audioOutput);
+
+    player->setSource(soundUrl);
     // For some reason the first play might be not successful. Thus it is performed on startup
     // to ensure that the the sound is actually played when the toast is shown.
-    connect(player, &QMediaPlayer::mediaStatusChanged, [=](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::LoadedMedia)
-        {
-            player->audioOutput()->setVolume(0.0);
-            player->play();
-        }
-    });
-    player->setSource(soundUrl);
+    audioOutput->setVolume(0.0);
+    player->play();
+
     return player;
 }
 
