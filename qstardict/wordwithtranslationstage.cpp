@@ -93,6 +93,7 @@ void WordWithTranslationStage::showCurrentWord()
         else
         {
             nextWordButton->setVisible(true);
+            nextWordButton->setFocus();
             nextStageButton->setVisible(false);
         }
     }
