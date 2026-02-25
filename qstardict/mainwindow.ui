@@ -34,6 +34,13 @@
        <number>0</number>
       </property>
       <item>
+       <widget class="QToolButton" name="randomWordButton">
+        <property name="text">
+         <string>Random word</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QToolButton" name="searchClearButton">
         <property name="toolTip">
          <string>Clear the search box</string>
@@ -229,12 +236,12 @@
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>315</x>
-     <y>59</y>
+     <x>519</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
-     <x>647</x>
-     <y>61</y>
+     <x>646</x>
+     <y>160</y>
     </hint>
    </hints>
   </connection>
@@ -245,12 +252,12 @@
    <slot>setFocus()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>315</x>
-     <y>59</y>
+     <x>519</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
-     <x>647</x>
-     <y>61</y>
+     <x>646</x>
+     <y>160</y>
     </hint>
    </hints>
   </connection>
@@ -261,12 +268,12 @@
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>438</x>
-     <y>50</y>
+     <x>646</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
-     <x>661</x>
-     <y>51</y>
+     <x>732</x>
+     <y>159</y>
     </hint>
    </hints>
   </connection>

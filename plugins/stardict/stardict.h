@@ -23,10 +23,10 @@
 #include "lib.h"
 #include "../dictplugin.h"
 
+#include <random>
 #include <string>
 #include <QVector>
 #include <QHash>
-
 
 class StarDict: public QObject, public QStarDict::DictPlugin
 {
@@ -52,7 +52,7 @@ class StarDict: public QObject, public QStarDict::DictPlugin
 			<< "Opera Wang <wangvisual@sohu.com>"
 			<< "Alexander Rodin <rodin.alexander@gmail.com>"; }
 		Features features() const
-		{ return Features(SearchSimilar | SettingsDialog); }
+		{ return Features(SearchSimilar | SettingsDialog | RandomWord); }
 
 		QStringList availableDicts() const;
 		QStringList loadedDicts() const
@@ -63,6 +63,8 @@ class StarDict: public QObject, public QStarDict::DictPlugin
 		bool isTranslatable(const QString &dict, const QString &word);
 		Translation translate(const QString &dict, const QString &word);
 		virtual QStringList findSimilarWords(const QString &dict, const QString &word);
+
+		virtual QString randomWord(const QString &dict);
 
 		int execSettingsDialog(QWidget *parent);
 
@@ -77,6 +79,7 @@ class StarDict: public QObject, public QStarDict::DictPlugin
 		QHash<QString, int> m_loadedDicts;
 		bool m_reformatLists;
 		bool m_expandAbbreviations;
+		std::mt19937 randomGenerator;
 };
 
 #endif // STARDICT_H

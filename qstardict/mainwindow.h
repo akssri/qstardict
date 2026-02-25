@@ -125,6 +125,7 @@ class MainWindow: public QMainWindow, private Ui::MainWindow
         void on_actionHelp_triggered();
         void on_actionAbout_triggered();
         void on_queryButton_clicked();
+        void on_randomWordButton_clicked();
 
         void wordsListItemActivated(QListWidgetItem *item);
         void wordTranslated(const QString &word);

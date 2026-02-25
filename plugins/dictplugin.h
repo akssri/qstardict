@@ -53,6 +53,10 @@ class DictPlugin
              * Dictionary plugin has a settings dialog.
              */
             SettingsDialog = 0x02,
+            /**
+             * Dictionary plugin supports finiding a random word.
+             */
+            RandomWord    = 0x04,
         };
         Q_DECLARE_FLAGS(Features, Feature)
 
@@ -269,6 +273,12 @@ class DictPlugin
          */
         virtual int execSettingsDialog([[maybe_unused]] QWidget *parent = nullptr)
         { return 0; }
+
+        /**
+         * Return a random word.
+         */
+        virtual QString randomWord(const QString &)
+        { return QString(); }
 
     protected:
         /**

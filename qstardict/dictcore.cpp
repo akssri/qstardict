@@ -238,6 +238,23 @@ void DictCore::reloadDicts()
             m_loadedDicts << *i;
 }
 
+QString DictCore::randomWord()
+{
+    for (const auto &dict: loadedDicts())
+    {
+        DictPlugin *plugin = DictCore::plugin(dict.plugin());
+        if (! plugin)
+            continue;
+        if (plugin->features() & DictPlugin::RandomWord)
+        {
+            QString word = plugin->randomWord(dict.name());
+            if (! word.isEmpty())
+                return word;
+        }
+    }
+    return QString();
+}
+
 }
 
 // vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab cindent textwidth=120 formatoptions=tc

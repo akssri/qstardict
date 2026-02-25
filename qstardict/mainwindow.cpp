@@ -183,6 +183,11 @@ void MainWindow::on_queryButton_clicked()
     translationView->translate(searchBox->text());
 }
 
+void MainWindow::on_randomWordButton_clicked()
+{
+    showTranslation(m_dict->randomWord());
+}
+
 void MainWindow::reload()
 {
     wordsList->clear();

@@ -152,6 +152,11 @@ class DictCore: public QObject
          */
         void saveSettings();
 
+        /**
+         * Return a random word.
+         */
+        QString randomWord();
+
     private:
 
         /**

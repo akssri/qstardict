@@ -19,6 +19,7 @@
 
 #include "stardict.h"
 
+#include <cstdlib>
 #include <list>
 #include <map>
 #include <string>
@@ -108,7 +109,8 @@ class IfoFileFinder
 }
 
 StarDict::StarDict(QObject *parent)
-	: QObject(parent)
+	: QObject(parent),
+	  randomGenerator(std::random_device()())
 {
 	m_sdLibs = new Libs;
 	QSettings settings("qstardict","qstardict");
@@ -124,7 +126,7 @@ StarDict::StarDict(QObject *parent)
 		m_dictDirs << QCoreApplication::applicationDirPath() + "/dic";
 #endif // Q_OS_UNIX
 		m_dictDirs << QDir::homePath() + "/.stardict/dic";
-	}
+    }
 }
 
 StarDict::~StarDict()
@@ -213,6 +215,17 @@ QStringList StarDict::findSimilarWords(const QString &dict, const QString &word)
 		g_free(*p);
 	}
 	return result;
+}
+
+QString StarDict::randomWord(const QString &dict)
+{
+    if (! m_loadedDicts.contains(dict))
+        return QString();
+
+    int dictIndex = m_loadedDicts[dict];
+    std::uniform_int_distribution<glong> randomDistribution(0, m_sdLibs->narticles(dictIndex));
+    const gchar *word = m_sdLibs->poGetWord(randomDistribution(randomGenerator), dictIndex);
+    return QString(word);
 }
 
 int StarDict::execSettingsDialog(QWidget *parent)
