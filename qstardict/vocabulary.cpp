@@ -151,7 +151,7 @@ unsigned Vocabulary::numberOfWordsStudiedToday()
     QSqlQuery query(m_db);
     query.prepare(
         "SELECT count() FROM words\n"
-        "WHERE studied AND strftime(\"%s\", datetime()) - strftime(\"%s\", last_excercise) < 60 * 60 * 24");
+        "WHERE studied AND strftime(\"%Y-%m-%d\", last_excercise, \"localtime\") = date(\"now\", \"localtime\")");
     if (! query.exec())
         qDebug() << "numberOfWordsStudiedToday error: " << query.lastError();
 
