@@ -50,11 +50,12 @@ DictCore::~DictCore()
 
 bool DictCore::isTranslatable(const QString &word)
 {
-    for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i) 
+    for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i)
     {
         if (! m_plugins.contains(i->plugin()))
             continue;
-        if (qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance())->isTranslatable(i->name(), word))
+        QString w = Translit::convert(word, dictScheme(i->plugin(), i->name()));
+        if (qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance())->isTranslatable(i->name(), w))
             return true;
     }
     return false;
@@ -69,9 +70,10 @@ QString DictCore::translate(const QString &word)
         if (! m_plugins.contains(i->plugin()))
             continue;
         DictPlugin *plugin = qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance());
-        if (! plugin->isTranslatable(i->name(), simplifiedWord))
+        QString w = Translit::convert(simplifiedWord, dictScheme(i->plugin(), i->name()));
+        if (! plugin->isTranslatable(i->name(), w))
             continue;
-        DictPlugin::Translation translation = plugin->translate(i->name(), simplifiedWord);
+        DictPlugin::Translation translation = plugin->translate(i->name(), w);
         result += "<p>\n"
             "<font class=\"dict_name\">" + translation.dictName() + "</font><br>\n"
             "<font class=\"title\">" + translation.title() + "</font><br>\n"
@@ -91,7 +93,8 @@ QStringList DictCore::findSimilarWords(const QString &word)
         DictPlugin *plugin = qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance());
         if (! plugin->features().testFlag(DictPlugin::SearchSimilar))
             continue;
-        QStringList similar = plugin->findSimilarWords(i->name(), simplifiedWord);
+        QString w = Translit::convert(simplifiedWord, dictScheme(i->plugin(), i->name()));
+        QStringList similar = plugin->findSimilarWords(i->name(), w);
         for (QStringList::const_iterator j = similar.begin(); j != similar.end(); ++j)
             if (! result.contains(*j, Qt::CaseSensitive))
                 result << *j;
@@ -202,6 +205,11 @@ void DictCore::saveSettings()
     for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i)
         rawDictsList << i->plugin() << i->name();
     config.setValue("DictCore/loadedDicts", rawDictsList);
+
+    QStringList schemeList;
+    for (auto i = m_dictSchemes.constBegin(); i != m_dictSchemes.constEnd(); ++i)
+        schemeList << i.key() << Translit::schemeToString(i.value());
+    config.setValue("DictCore/dictSchemes", schemeList);
 }
 
 void DictCore::loadSettings()
@@ -218,6 +226,24 @@ void DictCore::loadSettings()
             dicts << Dictionary(*i, *(i + 1));
         setLoadedDicts(dicts);
     }
+
+    m_dictSchemes.clear();
+    QStringList schemeList = config.value("DictCore/dictSchemes").toStringList();
+    for (int i = 0; i + 1 < schemeList.size(); i += 2)
+        m_dictSchemes[schemeList[i]] = Translit::schemeFromString(schemeList[i + 1]);
+}
+
+Translit::Scheme DictCore::dictScheme(const QString &plugin, const QString &name) const
+{
+    return m_dictSchemes.value(schemeKey(plugin, name), Translit::Scheme::None);
+}
+
+void DictCore::setDictScheme(const QString &plugin, const QString &name, Translit::Scheme scheme)
+{
+    if (scheme == Translit::Scheme::None)
+        m_dictSchemes.remove(schemeKey(plugin, name));
+    else
+        m_dictSchemes[schemeKey(plugin, name)] = scheme;
 }
 
 void DictCore::reloadDicts()

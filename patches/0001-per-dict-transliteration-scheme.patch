@@ -1,0 +1,530 @@
+diff --git a/qstardict/dictcore.cpp b/qstardict/dictcore.cpp
+index c529c86..64e3a76 100644
+--- a/qstardict/dictcore.cpp
++++ b/qstardict/dictcore.cpp
+@@ -50,11 +50,12 @@ DictCore::~DictCore()
+ 
+ bool DictCore::isTranslatable(const QString &word)
+ {
+-    for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i) 
++    for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i)
+     {
+         if (! m_plugins.contains(i->plugin()))
+             continue;
+-        if (qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance())->isTranslatable(i->name(), word))
++        QString w = Translit::convert(word, dictScheme(i->plugin(), i->name()));
++        if (qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance())->isTranslatable(i->name(), w))
+             return true;
+     }
+     return false;
+@@ -69,9 +70,10 @@ QString DictCore::translate(const QString &word)
+         if (! m_plugins.contains(i->plugin()))
+             continue;
+         DictPlugin *plugin = qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance());
+-        if (! plugin->isTranslatable(i->name(), simplifiedWord))
++        QString w = Translit::convert(simplifiedWord, dictScheme(i->plugin(), i->name()));
++        if (! plugin->isTranslatable(i->name(), w))
+             continue;
+-        DictPlugin::Translation translation = plugin->translate(i->name(), simplifiedWord);
++        DictPlugin::Translation translation = plugin->translate(i->name(), w);
+         result += "<p>\n"
+             "<font class=\"dict_name\">" + translation.dictName() + "</font><br>\n"
+             "<font class=\"title\">" + translation.title() + "</font><br>\n"
+@@ -91,7 +93,8 @@ QStringList DictCore::findSimilarWords(const QString &word)
+         DictPlugin *plugin = qobject_cast<DictPlugin*>(m_plugins[i->plugin()]->instance());
+         if (! plugin->features().testFlag(DictPlugin::SearchSimilar))
+             continue;
+-        QStringList similar = plugin->findSimilarWords(i->name(), simplifiedWord);
++        QString w = Translit::convert(simplifiedWord, dictScheme(i->plugin(), i->name()));
++        QStringList similar = plugin->findSimilarWords(i->name(), w);
+         for (QStringList::const_iterator j = similar.begin(); j != similar.end(); ++j)
+             if (! result.contains(*j, Qt::CaseSensitive))
+                 result << *j;
+@@ -202,6 +205,11 @@ void DictCore::saveSettings()
+     for (QList<Dictionary>::const_iterator i = m_loadedDicts.begin(); i != m_loadedDicts.end(); ++i)
+         rawDictsList << i->plugin() << i->name();
+     config.setValue("DictCore/loadedDicts", rawDictsList);
++
++    QStringList schemeList;
++    for (auto i = m_dictSchemes.constBegin(); i != m_dictSchemes.constEnd(); ++i)
++        schemeList << i.key() << Translit::schemeToString(i.value());
++    config.setValue("DictCore/dictSchemes", schemeList);
+ }
+ 
+ void DictCore::loadSettings()
+@@ -218,6 +226,24 @@ void DictCore::loadSettings()
+             dicts << Dictionary(*i, *(i + 1));
+         setLoadedDicts(dicts);
+     }
++
++    m_dictSchemes.clear();
++    QStringList schemeList = config.value("DictCore/dictSchemes").toStringList();
++    for (int i = 0; i + 1 < schemeList.size(); i += 2)
++        m_dictSchemes[schemeList[i]] = Translit::schemeFromString(schemeList[i + 1]);
++}
++
++Translit::Scheme DictCore::dictScheme(const QString &plugin, const QString &name) const
++{
++    return m_dictSchemes.value(schemeKey(plugin, name), Translit::Scheme::None);
++}
++
++void DictCore::setDictScheme(const QString &plugin, const QString &name, Translit::Scheme scheme)
++{
++    if (scheme == Translit::Scheme::None)
++        m_dictSchemes.remove(schemeKey(plugin, name));
++    else
++        m_dictSchemes[schemeKey(plugin, name)] = scheme;
+ }
+ 
+ void DictCore::reloadDicts()
+diff --git a/qstardict/dictcore.h b/qstardict/dictcore.h
+index ed506d9..5774882 100644
+--- a/qstardict/dictcore.h
++++ b/qstardict/dictcore.h
+@@ -28,6 +28,7 @@
+ #include <QPluginLoader>
+ 
+ #include "../plugins/dictplugin.h"
++#include "translit.h"
+ 
+ 
+ namespace QStarDict
+@@ -157,6 +158,15 @@ class DictCore: public QObject
+          */
+         QString randomWord();
+ 
++        /**
++         * Return the transliteration scheme for a given dict. Defaults to None.
++         */
++        Translit::Scheme dictScheme(const QString &plugin, const QString &name) const;
++        /**
++         * Set the transliteration scheme for a given dict.
++         */
++        void setDictScheme(const QString &plugin, const QString &name, Translit::Scheme scheme);
++
+     private:
+ 
+         /**
+@@ -164,8 +174,12 @@ class DictCore: public QObject
+          */
+         void loadSettings();
+ 
++        static QString schemeKey(const QString &plugin, const QString &name)
++        { return plugin + QLatin1Char('/') + name; }
++
+         QHash<QString, QPluginLoader*> m_plugins;
+         QList<Dictionary> m_loadedDicts;
++        QHash<QString, Translit::Scheme> m_dictSchemes;
+ };
+ 
+ }
+diff --git a/qstardict/qstardict.pro b/qstardict/qstardict.pro
+index f7c8a94..031692f 100644
+--- a/qstardict/qstardict.pro
++++ b/qstardict/qstardict.pro
+@@ -59,6 +59,7 @@ HEADERS += \
+     toast.h \
+     trainer.h \
+     trainingsummary.h \
++    translit.h \
+     tray.h \
+     typeinstage.h \
+     vocabulary.h \
+@@ -90,6 +91,7 @@ SOURCES += \
+     toast.cpp \
+     trainer.cpp \
+     trainingsummary.cpp \
++    translit.cpp \
+     tray.cpp \
+     typeinstage.cpp \
+     vocabulary.cpp \
+diff --git a/qstardict/settingsdialog.cpp b/qstardict/settingsdialog.cpp
+index 715f5ba..a0ddfe8 100644
+--- a/qstardict/settingsdialog.cpp
++++ b/qstardict/settingsdialog.cpp
+@@ -20,6 +20,7 @@
+ 
+ #include "settingsdialog.h"
+ 
++#include <QComboBox>
+ #include <QFileDialog>
+ #include <QMessageBox>
+ #include <QStandardItemModel>
+@@ -30,6 +31,7 @@
+ #include <QKeySequence>
+ #include <math.h>
+ #include "dictcore.h"
++#include "translit.h"
+ #include "ipaspeaker.h"
+ #include "mainwindow.h"
+ #include "popupwindow.h"
+@@ -72,13 +74,15 @@ SettingsDialog::SettingsDialog(QWidget *parent, SettingsDialog::Tab activeTab)
+     pluginsTableView->setColumnWidth(1, 320);
+ 
+     m_dictsModel = new QStandardItemModel(this);
+-    m_dictsModel->setHorizontalHeaderLabels(QStringList() << tr("Enabled") << tr("Name") << tr("Plugin"));
+-    loadDictsList();
++    m_dictsModel->setHorizontalHeaderLabels(
++            QStringList() << tr("Enabled") << tr("Name") << tr("Plugin") << tr("Scheme"));
+     dictsTableView->setModel(m_dictsModel);
++    loadDictsList();
+     dictsTableView->verticalHeader()->hide();
+     dictsTableView->setColumnWidth(0, 60);
+     dictsTableView->setColumnWidth(1, 200);
+     dictsTableView->setColumnWidth(2, 120);
++    dictsTableView->setColumnWidth(3, 130);
+ 
+     // Load global settings
+     systemTrayBox->setChecked(app->tray()->isVisible());
+@@ -175,8 +179,15 @@ void SettingsDialog::accept()
+     QList<DictCore::Dictionary> loadedDicts;
+     rowCount = m_dictsModel->rowCount();
+     for (int i = 0; i < rowCount; ++i)
++    {
++        const QString name = m_dictsModel->item(i, 1)->text();
++        const QString plugin = m_dictsModel->item(i, 2)->text();
+         if (m_dictsModel->item(i, 0)->checkState() == Qt::Checked)
+-            loadedDicts << DictCore::Dictionary(m_dictsModel->item(i, 2)->text(), m_dictsModel->item(i, 1)->text());
++            loadedDicts << DictCore::Dictionary(plugin, name);
++        QComboBox *combo = qobject_cast<QComboBox*>(dictsTableView->indexWidget(m_dictsModel->index(i, 3)));
++        if (combo)
++            dict->setDictScheme(plugin, name, Translit::schemeFromString(combo->currentText()));
++    }
+     dict->setLoadedDicts(loadedDicts);
+ 
+     // Save global settings
+@@ -273,32 +284,30 @@ void SettingsDialog::reject()
+ 
+ void SettingsDialog::loadDictsList()
+ {
+-    int i;
+-    QList<DictCore::Dictionary> loadedDicts = Application::instance()->dictCore()->loadedDicts();
++    DictCore *core = Application::instance()->dictCore();
++    QList<DictCore::Dictionary> loadedDicts = core->loadedDicts();
+     m_dictsModel->setRowCount(0);
+-    for (i = 0; i < loadedDicts.size(); ++i)
+-    {
++    auto addRow = [&](int row, const DictCore::Dictionary &d, bool enabled) {
+         QStandardItem *item = new QStandardItem();
+         item->setCheckable(true);
+-        item->setCheckState(Qt::Checked);
+-        m_dictsModel->setItem(i, 0, item);
+-        m_dictsModel->setItem(i, 1, new QStandardItem(loadedDicts[i].name()));
+-        m_dictsModel->setItem(i, 2, new QStandardItem(loadedDicts[i].plugin()));
+-    }
+-    QList<DictCore::Dictionary> dicts = Application::instance()->dictCore()->availableDicts();
+-    for (QList<DictCore::Dictionary>::const_iterator iter = dicts.begin(); iter != dicts.end(); ++iter)
+-    {
++        item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
++        m_dictsModel->setItem(row, 0, item);
++        m_dictsModel->setItem(row, 1, new QStandardItem(d.name()));
++        m_dictsModel->setItem(row, 2, new QStandardItem(d.plugin()));
++        m_dictsModel->setItem(row, 3, new QStandardItem());
++        QComboBox *combo = new QComboBox();
++        combo->addItems(Translit::schemeNames());
++        combo->setCurrentText(Translit::schemeToString(core->dictScheme(d.plugin(), d.name())));
++        dictsTableView->setIndexWidget(m_dictsModel->index(row, 3), combo);
++    };
++
++    int i = 0;
++    for (; i < loadedDicts.size(); ++i)
++        addRow(i, loadedDicts[i], true);
++    QList<DictCore::Dictionary> dicts = core->availableDicts();
++    for (auto iter = dicts.begin(); iter != dicts.end(); ++iter)
+         if (! loadedDicts.contains(*iter))
+-        {
+-            QStandardItem *item = new QStandardItem();
+-            item->setCheckable(true);
+-            item->setCheckState(Qt::Unchecked);
+-            m_dictsModel->setItem(i, 0, item);
+-            m_dictsModel->setItem(i, 1, new QStandardItem(iter->name()));
+-            m_dictsModel->setItem(i, 2, new QStandardItem(iter->plugin()));
+-            ++i;
+-        }
+-    }
++            addRow(i++, *iter, false);
+ }
+ 
+ void SettingsDialog::loadPluginsList()
+diff --git a/qstardict/translit.cpp b/qstardict/translit.cpp
+new file mode 100644
+index 0000000..76ea011
+--- /dev/null
++++ b/qstardict/translit.cpp
+@@ -0,0 +1,240 @@
++#include "translit.h"
++
++#include <QHash>
++#include <QVector>
++#include <QStringView>
++
++namespace QStarDict::Translit
++{
++
++namespace
++{
++
++bool hasDevanagari(const QString &s)
++{
++    for (const QChar c : s) {
++        const ushort u = c.unicode();
++        if (u >= 0x0900 && u <= 0x097F)
++            return true;
++    }
++    return false;
++}
++
++const QHash<QChar, QString> &devaIndepVowels()
++{
++    static const QHash<QChar, QString> m = {
++        {QChar(0x0905), "a"},  {QChar(0x0906), "A"},  {QChar(0x0907), "i"},
++        {QChar(0x0908), "I"},  {QChar(0x0909), "u"},  {QChar(0x090A), "U"},
++        {QChar(0x090B), "R"},  {QChar(0x0960), "RR"}, {QChar(0x090C), "lR"},
++        {QChar(0x0961), "lRR"},
++        {QChar(0x090F), "e"},  {QChar(0x0910), "ai"},
++        {QChar(0x0913), "o"},  {QChar(0x0914), "au"},
++    };
++    return m;
++}
++
++const QHash<QChar, QString> &devaVowelSigns()
++{
++    static const QHash<QChar, QString> m = {
++        {QChar(0x093E), "A"},  {QChar(0x093F), "i"},  {QChar(0x0940), "I"},
++        {QChar(0x0941), "u"},  {QChar(0x0942), "U"},
++        {QChar(0x0943), "R"},  {QChar(0x0944), "RR"},
++        {QChar(0x0962), "lR"}, {QChar(0x0963), "lRR"},
++        {QChar(0x0947), "e"},  {QChar(0x0948), "ai"},
++        {QChar(0x094B), "o"},  {QChar(0x094C), "au"},
++    };
++    return m;
++}
++
++const QHash<QChar, QString> &devaConsonants()
++{
++    static const QHash<QChar, QString> m = {
++        {QChar(0x0915), "k"},  {QChar(0x0916), "kh"}, {QChar(0x0917), "g"},
++        {QChar(0x0918), "gh"}, {QChar(0x0919), "G"},
++        {QChar(0x091A), "c"},  {QChar(0x091B), "ch"}, {QChar(0x091C), "j"},
++        {QChar(0x091D), "jh"}, {QChar(0x091E), "J"},
++        {QChar(0x091F), "T"},  {QChar(0x0920), "Th"}, {QChar(0x0921), "D"},
++        {QChar(0x0922), "Dh"}, {QChar(0x0923), "N"},
++        {QChar(0x0924), "t"},  {QChar(0x0925), "th"}, {QChar(0x0926), "d"},
++        {QChar(0x0927), "dh"}, {QChar(0x0928), "n"},
++        {QChar(0x092A), "p"},  {QChar(0x092B), "ph"}, {QChar(0x092C), "b"},
++        {QChar(0x092D), "bh"}, {QChar(0x092E), "m"},
++        {QChar(0x092F), "y"},  {QChar(0x0930), "r"},  {QChar(0x0932), "l"},
++        {QChar(0x0935), "v"},  {QChar(0x0936), "z"},  {QChar(0x0937), "S"},
++        {QChar(0x0938), "s"},  {QChar(0x0939), "h"},
++    };
++    return m;
++}
++
++QString devaToHK(const QString &in)
++{
++    const auto &vowels    = devaIndepVowels();
++    const auto &vsigns    = devaVowelSigns();
++    const auto &cons      = devaConsonants();
++    QString out;
++    out.reserve(in.size() * 2);
++    for (int i = 0; i < in.size(); ++i) {
++        const QChar c = in[i];
++        auto ci = cons.find(c);
++        if (ci != cons.end()) {
++            out += *ci;
++            out += QLatin1Char('a');
++            continue;
++        }
++        auto vi = vowels.find(c);
++        if (vi != vowels.end()) {
++            out += *vi;
++            continue;
++        }
++        auto si = vsigns.find(c);
++        if (si != vsigns.end()) {
++            if (!out.isEmpty() && out.back() == QLatin1Char('a'))
++                out.chop(1);
++            out += *si;
++            continue;
++        }
++        if (c == QChar(0x094D)) {           // virama
++            if (!out.isEmpty() && out.back() == QLatin1Char('a'))
++                out.chop(1);
++            continue;
++        }
++        if (c == QChar(0x0902)) { out += QLatin1Char('M'); continue; }
++        if (c == QChar(0x0903)) { out += QLatin1Char('H'); continue; }
++        if (c == QChar(0x0901)) { out += QLatin1Char('~'); continue; }
++        if (c == QChar(0x093D)) { out += QLatin1Char('\''); continue; }
++        const ushort u = c.unicode();
++        if (u >= 0x0966 && u <= 0x096F) {
++            out += QChar('0' + (u - 0x0966));
++            continue;
++        }
++        out += c;
++    }
++    return out;
++}
++
++// HK phonemes in longest-first order for greedy tokenization.
++const QVector<QString> &hkTokens()
++{
++    static const QVector<QString> t = {
++        "lRR", "RR", "lR",
++        "kh", "gh", "ch", "jh", "Th", "Dh", "th", "dh", "ph", "bh", "ai", "au",
++        "k", "g", "G", "c", "j", "J", "T", "D", "N",
++        "t", "d", "n", "p", "b", "m",
++        "y", "r", "l", "v", "z", "S", "s", "h",
++        "a", "A", "i", "I", "u", "U", "R", "e", "o", "M", "H"
++    };
++    return t;
++}
++
++QString retokenizeHK(const QString &hk, const QHash<QString, QString> &map)
++{
++    const auto &tokens = hkTokens();
++    QString out;
++    out.reserve(hk.size() * 2);
++    int i = 0;
++    while (i < hk.size()) {
++        bool matched = false;
++        for (const QString &tok : tokens) {
++            if (QStringView(hk).mid(i).startsWith(tok)) {
++                auto it = map.find(tok);
++                out += (it != map.end()) ? *it : tok;
++                i += tok.size();
++                matched = true;
++                break;
++            }
++        }
++        if (!matched) {
++            out += hk[i];
++            ++i;
++        }
++    }
++    return out;
++}
++
++// Non-identity substitutions per scheme. Anything not listed passes through
++// unchanged (i.e. stays in HK form, which is fine for HK targets).
++const QHash<QString, QString> &hkToItransMap()
++{
++    static const QHash<QString, QString> m = {
++        {"lRR", "L^I"}, {"RR", "R^I"}, {"lR", "L^i"}, {"R", "R^i"},
++        {"G", "~N"}, {"J", "~n"},
++        {"A", "aa"}, {"I", "ii"}, {"U", "uu"},
++        {"ch", "Ch"}, {"c", "ch"},
++        {"z", "sh"}, {"S", "Sh"},
++    };
++    return m;
++}
++
++const QHash<QString, QString> &hkToOptitransMap()
++{
++    static const QHash<QString, QString> m = {
++        {"A", "aa"}, {"I", "ii"}, {"U", "uu"},
++        {"G", "~N"}, {"J", "~n"},
++        {"ch", "chh"}, {"c", "ch"},
++        {"z", "sh"}, {"S", "Sh"},
++    };
++    return m;
++}
++
++const QHash<QString, QString> &hkToSlp1Map()
++{
++    static const QHash<QString, QString> m = {
++        {"kh", "K"}, {"gh", "G"}, {"G", "N"},
++        {"ch", "C"}, {"jh", "J"}, {"J", "Y"},
++        {"T", "w"}, {"Th", "W"}, {"D", "q"}, {"Dh", "Q"}, {"N", "R"},
++        {"th", "T"}, {"dh", "D"},
++        {"ph", "P"}, {"bh", "B"},
++        {"z", "S"}, {"S", "z"},
++        {"R", "f"}, {"RR", "F"}, {"lR", "x"}, {"lRR", "X"},
++        {"ai", "E"}, {"au", "O"},
++    };
++    return m;
++}
++
++}  // namespace
++
++QStringList schemeNames()
++{
++    return {"None", "Devanāgarī", "HK", "ITRANS", "Optitrans", "SLP1"};
++}
++
++QString schemeToString(Scheme s)
++{
++    switch (s) {
++    case Scheme::None:       return "None";
++    case Scheme::Devanagari: return "Devanāgarī";
++    case Scheme::HK:         return "HK";
++    case Scheme::ITRANS:     return "ITRANS";
++    case Scheme::Optitrans:  return "Optitrans";
++    case Scheme::SLP1:       return "SLP1";
++    }
++    return "None";
++}
++
++Scheme schemeFromString(const QString &name)
++{
++    if (name == "Devanāgarī" || name == "Devanagari") return Scheme::Devanagari;
++    if (name == "HK")         return Scheme::HK;
++    if (name == "ITRANS")     return Scheme::ITRANS;
++    if (name == "Optitrans")  return Scheme::Optitrans;
++    if (name == "SLP1")       return Scheme::SLP1;
++    return Scheme::None;
++}
++
++QString convert(const QString &input, Scheme target)
++{
++    if (target == Scheme::None || target == Scheme::Devanagari)
++        return input;
++    if (!hasDevanagari(input))
++        return input;
++    const QString hk = devaToHK(input);
++    switch (target) {
++    case Scheme::HK:        return hk;
++    case Scheme::ITRANS:    return retokenizeHK(hk, hkToItransMap());
++    case Scheme::Optitrans: return retokenizeHK(hk, hkToOptitransMap());
++    case Scheme::SLP1:      return retokenizeHK(hk, hkToSlp1Map());
++    default:                return input;
++    }
++}
++
++}
+diff --git a/qstardict/translit.h b/qstardict/translit.h
+new file mode 100644
+index 0000000..a5225fc
+--- /dev/null
++++ b/qstardict/translit.h
+@@ -0,0 +1,30 @@
++#ifndef TRANSLIT_H
++#define TRANSLIT_H
++
++#include <QString>
++#include <QStringList>
++
++namespace QStarDict::Translit
++{
++
++enum class Scheme
++{
++    None = 0,
++    Devanagari,
++    HK,
++    ITRANS,
++    Optitrans,
++    SLP1,
++};
++
++QStringList schemeNames();
++QString schemeToString(Scheme s);
++Scheme schemeFromString(const QString &name);
++
++// If input contains any Devanāgarī codepoints and target is a Roman scheme,
++// convert. Otherwise return input unchanged.
++QString convert(const QString &input, Scheme target);
++
++}
++
++#endif

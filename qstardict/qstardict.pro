@@ -59,6 +59,7 @@ HEADERS += \
     toast.h \
     trainer.h \
     trainingsummary.h \
+    translit.h \
     tray.h \
     typeinstage.h \
     vocabulary.h \
@@ -90,6 +91,7 @@ SOURCES += \
     toast.cpp \
     trainer.cpp \
     trainingsummary.cpp \
+    translit.cpp \
     tray.cpp \
     typeinstage.cpp \
     vocabulary.cpp \

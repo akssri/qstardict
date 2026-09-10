@@ -28,6 +28,7 @@
 #include <QPluginLoader>
 
 #include "../plugins/dictplugin.h"
+#include "translit.h"
 
 
 namespace QStarDict
@@ -157,6 +158,15 @@ class DictCore: public QObject
          */
         QString randomWord();
 
+        /**
+         * Return the transliteration scheme for a given dict. Defaults to None.
+         */
+        Translit::Scheme dictScheme(const QString &plugin, const QString &name) const;
+        /**
+         * Set the transliteration scheme for a given dict.
+         */
+        void setDictScheme(const QString &plugin, const QString &name, Translit::Scheme scheme);
+
     private:
 
         /**
@@ -164,8 +174,12 @@ class DictCore: public QObject
          */
         void loadSettings();
 
+        static QString schemeKey(const QString &plugin, const QString &name)
+        { return plugin + QLatin1Char('/') + name; }
+
         QHash<QString, QPluginLoader*> m_plugins;
         QList<Dictionary> m_loadedDicts;
+        QHash<QString, Translit::Scheme> m_dictSchemes;
 };
 
 }

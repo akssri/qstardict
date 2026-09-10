@@ -20,6 +20,7 @@
 
 #include "settingsdialog.h"
 
+#include <QComboBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStandardItemModel>
@@ -30,6 +31,7 @@
 #include <QKeySequence>
 #include <math.h>
 #include "dictcore.h"
+#include "translit.h"
 #include "ipaspeaker.h"
 #include "mainwindow.h"
 #include "popupwindow.h"
@@ -72,13 +74,15 @@ SettingsDialog::SettingsDialog(QWidget *parent, SettingsDialog::Tab activeTab)
     pluginsTableView->setColumnWidth(1, 320);
 
     m_dictsModel = new QStandardItemModel(this);
-    m_dictsModel->setHorizontalHeaderLabels(QStringList() << tr("Enabled") << tr("Name") << tr("Plugin"));
-    loadDictsList();
+    m_dictsModel->setHorizontalHeaderLabels(
+            QStringList() << tr("Enabled") << tr("Name") << tr("Plugin") << tr("Scheme"));
     dictsTableView->setModel(m_dictsModel);
+    loadDictsList();
     dictsTableView->verticalHeader()->hide();
     dictsTableView->setColumnWidth(0, 60);
     dictsTableView->setColumnWidth(1, 200);
     dictsTableView->setColumnWidth(2, 120);
+    dictsTableView->setColumnWidth(3, 130);
 
     // Load global settings
     systemTrayBox->setChecked(app->tray()->isVisible());
@@ -175,8 +179,15 @@ void SettingsDialog::accept()
     QList<DictCore::Dictionary> loadedDicts;
     rowCount = m_dictsModel->rowCount();
     for (int i = 0; i < rowCount; ++i)
+    {
+        const QString name = m_dictsModel->item(i, 1)->text();
+        const QString plugin = m_dictsModel->item(i, 2)->text();
         if (m_dictsModel->item(i, 0)->checkState() == Qt::Checked)
-            loadedDicts << DictCore::Dictionary(m_dictsModel->item(i, 2)->text(), m_dictsModel->item(i, 1)->text());
+            loadedDicts << DictCore::Dictionary(plugin, name);
+        QComboBox *combo = qobject_cast<QComboBox*>(dictsTableView->indexWidget(m_dictsModel->index(i, 3)));
+        if (combo)
+            dict->setDictScheme(plugin, name, Translit::schemeFromString(combo->currentText()));
+    }
     dict->setLoadedDicts(loadedDicts);
 
     // Save global settings
@@ -273,32 +284,30 @@ void SettingsDialog::reject()
 
 void SettingsDialog::loadDictsList()
 {
-    int i;
-    QList<DictCore::Dictionary> loadedDicts = Application::instance()->dictCore()->loadedDicts();
+    DictCore *core = Application::instance()->dictCore();
+    QList<DictCore::Dictionary> loadedDicts = core->loadedDicts();
     m_dictsModel->setRowCount(0);
-    for (i = 0; i < loadedDicts.size(); ++i)
-    {
+    auto addRow = [&](int row, const DictCore::Dictionary &d, bool enabled) {
         QStandardItem *item = new QStandardItem();
         item->setCheckable(true);
-        item->setCheckState(Qt::Checked);
-        m_dictsModel->setItem(i, 0, item);
-        m_dictsModel->setItem(i, 1, new QStandardItem(loadedDicts[i].name()));
-        m_dictsModel->setItem(i, 2, new QStandardItem(loadedDicts[i].plugin()));
-    }
-    QList<DictCore::Dictionary> dicts = Application::instance()->dictCore()->availableDicts();
-    for (QList<DictCore::Dictionary>::const_iterator iter = dicts.begin(); iter != dicts.end(); ++iter)
-    {
+        item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
+        m_dictsModel->setItem(row, 0, item);
+        m_dictsModel->setItem(row, 1, new QStandardItem(d.name()));
+        m_dictsModel->setItem(row, 2, new QStandardItem(d.plugin()));
+        m_dictsModel->setItem(row, 3, new QStandardItem());
+        QComboBox *combo = new QComboBox();
+        combo->addItems(Translit::schemeNames());
+        combo->setCurrentText(Translit::schemeToString(core->dictScheme(d.plugin(), d.name())));
+        dictsTableView->setIndexWidget(m_dictsModel->index(row, 3), combo);
+    };
+
+    int i = 0;
+    for (; i < loadedDicts.size(); ++i)
+        addRow(i, loadedDicts[i], true);
+    QList<DictCore::Dictionary> dicts = core->availableDicts();
+    for (auto iter = dicts.begin(); iter != dicts.end(); ++iter)
         if (! loadedDicts.contains(*iter))
-        {
-            QStandardItem *item = new QStandardItem();
-            item->setCheckable(true);
-            item->setCheckState(Qt::Unchecked);
-            m_dictsModel->setItem(i, 0, item);
-            m_dictsModel->setItem(i, 1, new QStandardItem(iter->name()));
-            m_dictsModel->setItem(i, 2, new QStandardItem(iter->plugin()));
-            ++i;
-        }
-    }
+            addRow(i++, *iter, false);
 }
 
 void SettingsDialog::loadPluginsList()
